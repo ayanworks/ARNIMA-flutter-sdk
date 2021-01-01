@@ -1,0 +1,43 @@
+group 'com.example.AriesFlutterMobileAgent'
+version '1.0'
+
+buildscript {
+    repositories {
+        google()
+        jcenter()
+    }
+
+    dependencies {
+        classpath 'com.android.tools.build:gradle:3.5.0'
+    }
+}
+
+rootProject.allprojects {
+    repositories {
+        google()
+        jcenter()
+        maven { url "https://jitpack.io" }
+        maven { url 'https://repo.sovrin.org/repository/maven-public' }
+    }
+}
+
+apply plugin: 'com.android.library'
+
+android {
+    compileSdkVersion 28
+    defaultConfig {
+        minSdkVersion 18
+    }
+    lintOptions {
+        disable 'InvalidPackage'
+    }
+}
+
+dependencies {
+    implementation fileTree(include: ['*.so'], dir: 'libs')
+    api 'org.hyperledger:indy:1.14.2'
+    implementation 'com.google.code.gson:gson:2.8.5'
+    implementation 'net.java.dev.jna:jna:5.2.0'
+    implementation 'com.google.android.gms:play-services-wallet:18.0.0'
+    api 'org.slf4j:slf4j-simple:1.6.1'
+}
