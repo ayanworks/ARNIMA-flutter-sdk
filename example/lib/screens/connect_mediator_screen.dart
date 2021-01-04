@@ -94,7 +94,7 @@ class _ConnectMediatorScreenState extends State<ConnectMediatorScreen> {
           Text(
             'status : $_status',
             style: TextStyle(
-              color: _status == "Connected" ? Colors.green : "",
+              color: _status == "Connected" ? Colors.green : null,
             ),
           ),
         ],
