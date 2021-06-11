@@ -1,3 +1,7 @@
+/*
+  Copyright AyanWorks Technology Solutions Pvt. Ltd. All Rights Reserved.
+  SPDX-License-Identifier: Apache-2.0
+*/
 import 'dart:convert';
 
 import 'package:AriesFlutterMobileAgent/Storage/DBModels.dart';
@@ -13,23 +17,23 @@ class WalletService {
     String label,
   ) async {
     try {
-      final String createWallet =
+      String createWallet =
           await _channel.invokeMethod('createWallet', <String, dynamic>{
         'configJson': configJson,
         'credentialJson': credentialsJson,
       });
-      print(createWallet);
-      List<dynamic> createDidAndVerKeyResponse = await createWalletDidStore(
-        configJson,
-        credentialsJson,
-        {},
-        true,
-        label,
-      );
-      return createDidAndVerKeyResponse;
-    } catch (err) {
-      print("Error in createWallet $err");
-      throw err;
+      if (createWallet.isNotEmpty && createWallet == 'success') {
+        List<dynamic> createDidAndVerKeyResponse = await createWalletDidStore(
+          configJson,
+          credentialsJson,
+          {},
+          true,
+          label,
+        );
+        return createDidAndVerKeyResponse;
+      }
+    } catch (exception) {
+      throw exception;
     }
   }
 
@@ -41,31 +45,30 @@ class WalletService {
     String label,
   ) async {
     try {
-      final List<dynamic> handle =
+      List<dynamic> responseOfMyDids =
           await _channel.invokeMethod('createAndStoreMyDids', <String, dynamic>{
         'configJson': configJson,
         'credentialJson': credentialsJson,
         'didJson': jsonEncode(didJson),
         'createMasterSecret': createMasterSecret,
       });
-      if (handle.length > 0) {
-        await DBServices.saveWalletData(
-          WalletData(
-            configJson,
-            credentialsJson,
-            label,
-            handle[0],
-            handle[1],
-            handle[2],
-            "",
-            "",
-          ),
+
+      if (responseOfMyDids.length > 0) {
+        WalletData walletDEtails = WalletData(
+          configJson,
+          credentialsJson,
+          label,
+          responseOfMyDids[0],
+          responseOfMyDids[1],
+          responseOfMyDids[2],
+          "",
+          "",
         );
+        await DBServices.saveWalletData(walletDEtails);
       }
-      return handle;
-    } catch (err) {
-      print("Error in Agent $err");
-      throw err;
+      return responseOfMyDids;
+    } catch (exception) {
+      throw exception;
     }
   }
 }

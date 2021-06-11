@@ -1,3 +1,7 @@
+/*
+  Copyright AyanWorks Technology Solutions Pvt. Ltd. All Rights Reserved.
+  SPDX-License-Identifier: Apache-2.0
+*/
 import 'package:hive/hive.dart';
 
 part 'messagedata.g.dart';
@@ -14,10 +18,20 @@ class MessageData extends HiveObject {
   final bool auto;
 
   @HiveField(3)
-  String thId = '0';
+  final String thId;
 
   @HiveField(4)
   final bool isProcessed;
 
-  MessageData(this.messageId, this.messages, this.auto, this.isProcessed);
+  @HiveField(5)
+  final String connectionId;
+
+  MessageData({
+    this.messageId,
+    this.messages,
+    this.auto,
+    this.thId = '0',
+    this.isProcessed,
+    this.connectionId,
+  });
 }

@@ -1,7 +1,8 @@
+/*
+  Copyright AyanWorks Technology Solutions Pvt. Ltd. All Rights Reserved.
+  SPDX-License-Identifier: Apache-2.0
+*/
 package com.example.AriesFlutterMobileAgent;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.RequiresApi;
 
 import android.content.Context;
 import android.os.Build;
@@ -9,6 +10,9 @@ import android.os.Handler;
 import android.os.Looper;
 import android.system.ErrnoException;
 import android.system.Os;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
 
 import java.util.ArrayList;
 
@@ -24,13 +28,15 @@ import io.flutter.plugin.common.PluginRegistry.Registrar;
  */
 @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
 public class AriesFlutterMobileAgentPlugin implements FlutterPlugin, MethodCallHandler {
-    /// The MethodChannel that will the communication between Flutter and native Android
-    ///
-    /// This local reference serves to register the plugin with the Flutter Engine and unregister it
-    /// when the Flutter Engine is detached from the Activity
-    private MethodChannel channel;
     AriesFlutterMobileAgent FlutterMobileAgent = new AriesFlutterMobileAgent();
+   
+    private MethodChannel channel;
     private Context context;
+
+    public static void registerWith(Registrar registrar) {
+        final MethodChannel channel = new MethodChannel(registrar.messenger(), "AriesFlutterMobileAgent");
+        channel.setMethodCallHandler(new AriesFlutterMobileAgentPlugin());
+    }
 
     @Override
     public void onAttachedToEngine(@NonNull FlutterPluginBinding flutterPluginBinding) {
@@ -45,58 +51,6 @@ public class AriesFlutterMobileAgentPlugin implements FlutterPlugin, MethodCallH
             System.loadLibrary("indy");
         } catch (ErrnoException e) {
             e.printStackTrace();
-        }
-    }
-
-    public static void registerWith(Registrar registrar) {
-        final MethodChannel channel = new MethodChannel(registrar.messenger(), "AriesFlutterMobileAgent");
-        channel.setMethodCallHandler(new AriesFlutterMobileAgentPlugin());
-    }
-
-    private static class MethodResultWrapper implements Result {
-        private Result methodResult;
-        private Handler handler;
-
-        MethodResultWrapper(Result result) {
-            methodResult = result;
-            handler = new Handler(Looper.getMainLooper());
-        }
-
-        @Override
-        public void success(final Object result) {
-            handler.post(
-                    new Runnable() {
-                        @Override
-                        public void run() {
-                            methodResult.success(result);
-                        }
-                    }
-            );
-        }
-
-        @Override
-        public void error(
-                final String errorCode, final String errorMessage, final Object errorDetails) {
-            handler.post(
-                    new Runnable() {
-                        @Override
-                        public void run() {
-                            methodResult.error(errorCode, errorMessage, errorDetails);
-                        }
-                    }
-            );
-        }
-
-        @Override
-        public void notImplemented() {
-            handler.post(
-                    new Runnable() {
-                        @Override
-                        public void run() {
-                            methodResult.notImplemented();
-                        }
-                    }
-            );
         }
     }
 
@@ -156,21 +110,103 @@ public class AriesFlutterMobileAgentPlugin implements FlutterPlugin, MethodCallH
                 byte[] signatureRaw = call.argument("signatureRaw");
                 FlutterMobileAgent.cryptoVerify(configJson, credentialJson, signerVk, messageRaw, signatureRaw, result);
                 break;
-            case "cryptoSign":
+            case "getCredDef":
+                String submitterDid = call.argument("submitterDid");
+                String credId = call.argument("credId");
+                FlutterMobileAgent.getCredDef(submitterDid, credId, result);
+                break;
+            case "getRevocRegDef":
+                submitterDid = call.argument("submitterDid");
+                id = call.argument("ID");
+                FlutterMobileAgent.getRevocRegDef(submitterDid, id, result);
+                break;
+            case "proverCreateCredentialReq":
                 configJson = call.argument("configJson");
                 credentialJson = call.argument("credentialJson");
-                signerVk = call.argument("signerVerkey");
-                messageRaw = call.argument("messageRaw");
-                FlutterMobileAgent.cryptoSign(configJson, credentialJson, signerVk, messageRaw, result);
+                String proverDid = call.argument("proverDid");
+                String credentialOfferJson = call.argument("credentialOfferJson");
+                String credentialDefJson = call.argument("credentialDefJson");
+                String masterSecretId = call.argument("masterSecretId");
+                FlutterMobileAgent.proverCreateCredentialReq(configJson, credentialJson, proverDid, credentialOfferJson, credentialDefJson, masterSecretId, result);
+                break;
+            case "proverStoreCredential":
+                configJson = call.argument("configJson");
+                credentialJson = call.argument("credentialJson");
+                credId = call.argument("credId");
+                String credReqMetadataJson = call.argument("credReqMetadataJson");
+                String credJson = call.argument("credJson");
+                String credDefJson = call.argument("credDefJson");
+                String revRegDefJson = call.argument("revRegDefJson");
+                FlutterMobileAgent.proverStoreCredential(configJson, credentialJson, credId, credReqMetadataJson, credJson, credDefJson, revRegDefJson, result);
+                break;
+            case "proverSearchCredentialsForProofReq":
+                configJson = call.argument("configJson");
+                credentialJson = call.argument("credentialJson");
+                String proofRequest = call.argument("proofRequest");
+                String did = call.argument("did");
+                masterSecretId = call.argument("masterSecretId");
+                FlutterMobileAgent.proverSearchCredentialsForProofReq(configJson, credentialJson, proofRequest, did, masterSecretId, context, result);
+                break;
+            case "proverGetCredentials":
+                configJson = call.argument("configJson");
+                credentialJson = call.argument("credentialJson");
+                String filter = call.argument("filter");
+                FlutterMobileAgent.proverGetCredentials(configJson, credentialJson, filter, result);
                 break;
             default:
                 result.notImplemented();
-
         }
     }
 
     @Override
     public void onDetachedFromEngine(@NonNull FlutterPluginBinding binding) {
         channel.setMethodCallHandler(null);
+    }
+
+    private static class MethodResultWrapper implements Result {
+        private final Result methodResult;
+        private final Handler handler;
+
+        MethodResultWrapper(Result result) {
+            methodResult = result;
+            handler = new Handler(Looper.getMainLooper());
+        }
+
+        @Override
+        public void success(final Object result) {
+            handler.post(
+                    new Runnable() {
+                        @Override
+                        public void run() {
+                            methodResult.success(result);
+                        }
+                    }
+            );
+        }
+
+        @Override
+        public void error(
+                final String errorCode, final String errorMessage, final Object errorDetails) {
+            handler.post(
+                    new Runnable() {
+                        @Override
+                        public void run() {
+                            methodResult.error(errorCode, errorMessage, errorDetails);
+                        }
+                    }
+            );
+        }
+
+        @Override
+        public void notImplemented() {
+            handler.post(
+                    new Runnable() {
+                        @Override
+                        public void run() {
+                            methodResult.notImplemented();
+                        }
+                    }
+            );
+        }
     }
 }

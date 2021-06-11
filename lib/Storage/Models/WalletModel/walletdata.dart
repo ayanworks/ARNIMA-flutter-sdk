@@ -1,3 +1,7 @@
+/*
+  Copyright AyanWorks Technology Solutions Pvt. Ltd. All Rights Reserved.
+  SPDX-License-Identifier: Apache-2.0
+*/
 import 'package:hive/hive.dart';
 
 part 'walletdata.g.dart';
@@ -38,4 +42,14 @@ class WalletData extends HiveObject {
     this.serviceEndpoint,
     this.routingKey,
   );
+
+  WalletData.next(
+      {this.walletConfig,
+      this.walletCredentials,
+      this.label,
+      this.publicDid,
+      this.verkey,
+      this.masterSecretId,
+      this.serviceEndpoint,
+      this.routingKey});
 }

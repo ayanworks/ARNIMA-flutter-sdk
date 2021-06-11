@@ -1,3 +1,7 @@
+/*
+  Copyright AyanWorks Technology Solutions Pvt. Ltd. All Rights Reserved.
+  SPDX-License-Identifier: Apache-2.0
+*/
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
 part of 'messagedata.dart';
@@ -17,17 +21,19 @@ class MessageDataAdapter extends TypeAdapter<MessageData> {
       for (int i = 0; i < numOfFields; i++) reader.readByte(): reader.read(),
     };
     return MessageData(
-      fields[0] as String,
-      fields[1] as String,
-      fields[2] as bool,
-      fields[4] as bool,
-    )..thId = fields[3] as String;
+      messageId: fields[0] as String,
+      messages: fields[1] as String,
+      auto: fields[2] as bool,
+      thId: fields[3] as String,
+      isProcessed: fields[4] as bool,
+      connectionId: fields[5] as String,
+    );
   }
 
   @override
   void write(BinaryWriter writer, MessageData obj) {
     writer
-      ..writeByte(5)
+      ..writeByte(6)
       ..writeByte(0)
       ..write(obj.messageId)
       ..writeByte(1)
@@ -37,7 +43,9 @@ class MessageDataAdapter extends TypeAdapter<MessageData> {
       ..writeByte(3)
       ..write(obj.thId)
       ..writeByte(4)
-      ..write(obj.isProcessed);
+      ..write(obj.isProcessed)
+      ..writeByte(5)
+      ..write(obj.connectionId);
   }
 
   @override

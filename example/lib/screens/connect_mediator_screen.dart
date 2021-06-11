@@ -15,15 +15,12 @@ class ConnectMediatorScreen extends StatefulWidget {
 
 class _ConnectMediatorScreenState extends State<ConnectMediatorScreen> {
   ProgressDialog progressIndicator;
-  String _status = "Null";
+  String _status = "";
 
   Future<void> connectWithMediator() async {
     try {
       progressIndicator.show();
-
-      WalletData user = await AriesFlutterMobileAgent.getWalletData();
-      print(user.verkey);
-      print(user.label);
+      var user = await AriesFlutterMobileAgent.getWalletData();
       var mediator = await AriesFlutterMobileAgent.connectWithMediator(
         "$MediatorAgentUrl/discover",
         jsonEncode({
@@ -43,7 +40,6 @@ class _ConnectMediatorScreenState extends State<ConnectMediatorScreen> {
       Navigator.pushNamed(context, ConnectionScreen.routeName);
     } catch (error) {
       progressIndicator.hide();
-      print("error $error");
     }
   }
 

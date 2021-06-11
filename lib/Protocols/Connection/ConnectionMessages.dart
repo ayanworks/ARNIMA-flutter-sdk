@@ -1,6 +1,12 @@
+/*
+  Copyright AyanWorks Technology Solutions Pvt. Ltd. All Rights Reserved.
+  SPDX-License-Identifier: Apache-2.0
+*/
 import 'dart:convert';
+
 import 'package:AriesFlutterMobileAgent/Utils/utils.dart';
 import 'package:uuid/uuid.dart';
+
 import 'ConnectionInterface.dart';
 
 var uuid = Uuid();
@@ -10,16 +16,14 @@ Object createInvitationMessage(
   String label,
 ) {
   DidDoc didDoc = connection.didDoc;
-  var serviceEndpoint = didDoc.service[0].serviceEndpoint.split('/endpoint')[0];
   var data = {
     '@type': MessageType.ConnectionInvitation,
     '@id': uuid.v4(),
     'label': label,
     'recipientKeys': didDoc.service[0].recipientKeys,
-    'serviceEndpoint': serviceEndpoint,
+    'serviceEndpoint': didDoc.service[0].serviceEndpoint,
     'routingKeys': didDoc.service[0].routingKeys,
   };
-  print(' data $data');
   return data;
 }
 

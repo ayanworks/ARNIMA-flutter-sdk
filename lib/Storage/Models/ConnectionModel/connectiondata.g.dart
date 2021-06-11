@@ -1,3 +1,8 @@
+/*
+  Copyright AyanWorks Technology Solutions Pvt. Ltd. All Rights Reserved.
+  SPDX-License-Identifier: Apache-2.0
+*/
+
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
 part of 'connectiondata.dart';

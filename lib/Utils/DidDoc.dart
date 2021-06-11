@@ -46,15 +46,15 @@ class DidDoc {
     }
     if (json['authentication'] != null) {
       List<Authentication> authentications = [];
-      json['authentication'].forEach((v) {
-        authentications.add(new Authentication.fromJson(v));
+      json['authentication'].forEach((value) {
+        authentications.add(new Authentication.fromJson(value));
       });
       authentication = authentications;
     }
     if (json['service'] != null) {
       List<Service> services = [];
-      json['service'].forEach((v) {
-        services.add(new Service.fromJson(v));
+      json['service'].forEach((value) {
+        services.add(new Service.fromJson(value));
       });
       service = services;
     }
@@ -65,20 +65,20 @@ class DidDoc {
     id = json['id'];
     if (json['publicKey'] != null) {
       publicKey = new List<PublicKey>();
-      json['publicKey'].forEach((v) {
-        publicKey.add(new PublicKey.fromJson(v));
+      json['publicKey'].forEach((value) {
+        publicKey.add(new PublicKey.fromJson(value));
       });
     }
     if (json['authentication'] != null) {
       authentication = new List<Authentication>();
-      json['authentication'].forEach((v) {
-        authentication.add(new Authentication.fromJson(v));
+      json['authentication'].forEach((value) {
+        authentication.add(new Authentication.fromJson(value));
       });
     }
     if (json['service'] != null) {
       service = new List<Service>();
-      json['service'].forEach((v) {
-        service.add(new Service.fromJson(v));
+      json['service'].forEach((value) {
+        service.add(new Service.fromJson(value));
       });
     }
   }
@@ -88,14 +88,15 @@ class DidDoc {
     data['@context'] = this.context;
     data['id'] = this.id;
     if (this.publicKey != null) {
-      data['publicKey'] = this.publicKey.map((v) => v.toJson()).toList();
+      data['publicKey'] =
+          this.publicKey.map((value) => value.toJson()).toList();
     }
     if (this.authentication != null) {
       data['authentication'] =
-          this.authentication.map((v) => v.toJson()).toList();
+          this.authentication.map((value) => value.toJson()).toList();
     }
     if (this.service != null) {
-      data['service'] = this.service.map((v) => v.toJson()).toList();
+      data['service'] = this.service.map((value) => value.toJson()).toList();
     }
     return data;
   }

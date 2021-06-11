@@ -1,3 +1,7 @@
+/*
+  Copyright AyanWorks Technology Solutions Pvt. Ltd. All Rights Reserved.
+  SPDX-License-Identifier: Apache-2.0
+*/
 #import "AriesFlutterMobileAgentPlugin.h"
 #if __has_include(<AriesFlutterMobileAgent/AriesFlutterMobileAgent-Swift.h>)
 #import <AriesFlutterMobileAgent/AriesFlutterMobileAgent-Swift.h>
