@@ -14,8 +14,8 @@ class _CreateWalletScreenState extends State<CreateWalletScreen> {
   ProgressDialog progressIndicator;
   TextEditingController walletNameController = TextEditingController();
   TextEditingController walletKeyController = TextEditingController();
+  // ignore: unused_field
   String _did = "";
-
   Future<void> _createWallet() async {
     List<dynamic> createWalletData;
     var arrayData;
@@ -29,8 +29,6 @@ class _CreateWalletScreenState extends State<CreateWalletScreen> {
           walletNameController.text,
         );
         arrayData = List<String>.from(createWalletData);
-        print("strings $arrayData");
-        print(arrayData[0]);
         setState(() {
           _did = arrayData[0];
           progressIndicator.hide();
@@ -44,7 +42,6 @@ class _CreateWalletScreenState extends State<CreateWalletScreen> {
       }
     } on PlatformException catch (err) {
       progressIndicator.hide();
-      print("example ${err.code}");
       if (err.code == '203') {
         setState(() {
           _did = "Wallet Already Exists";
@@ -131,7 +128,6 @@ class _CreateWalletScreenState extends State<CreateWalletScreen> {
                 ),
               ),
             ),
-            // Text('Did : $_did'),
           ],
         ),
       ),

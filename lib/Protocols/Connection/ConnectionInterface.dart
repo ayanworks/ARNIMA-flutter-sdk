@@ -1,3 +1,7 @@
+/*
+  Copyright AyanWorks Technology Solutions Pvt. Ltd. All Rights Reserved.
+  SPDX-License-Identifier: Apache-2.0
+*/
 import 'package:AriesFlutterMobileAgent/Utils/DidDoc.dart';
 
 class Connection {
@@ -33,15 +37,26 @@ class Connection {
 
   Connection.fromJson(Map<String, dynamic> json) {
     did = json['did'];
+
     theirDid = json['theirDid'];
-    theirDidDoc = json['theirDidDoc'];
-    didDoc =
-        json['didDoc'] != null ? new DidDoc.fromJson(json['didDoc']) : null;
+
+    if (json['theirDidDoc'] != null) {
+      var theirDidDocObj = new DidDoc.fromJson(json['theirDidDoc']);
+      theirDidDoc = theirDidDocObj;
+    } else {
+      theirDidDoc = json['theirDidDoc'];
+    }
     verkey = json['verkey'];
     state = json['state'];
     theirLabel = json['theirLabel'];
     createdAt = json['createdAt'];
     updatedAt = json['updatedAt'];
+    var didDocObj = new DidDoc.fromJson(json['didDoc']);
+    if (json['didDoc'] != null) {
+      didDoc = didDocObj;
+    } else {
+      didDoc = null;
+    }
   }
 
   Map<String, dynamic> toJson() {
@@ -50,12 +65,8 @@ class Connection {
     if (this.didDoc != null) {
       data['didDoc'] = this.didDoc.toJson();
     }
-    if (this.theirDidDoc != null) {
-      data['theirDidDoc'] = this.theirDidDoc.toJson();
-    }
-    if (this.theirDid != null) {
-      data['theirDid'] = this.theirDid;
-    }
+    data['theirDid'] = this.theirDid;
+    data['theirDidDoc'] = this.theirDidDoc;
     data['verkey'] = this.verkey;
     data['state'] = this.state;
     data['theirLabel'] = this.theirLabel;

@@ -2,11 +2,25 @@ import 'package:AriesFlutterMobileAgent/Protocols/Connection/ConnectionInterface
 import 'package:flutter/material.dart';
 
 class InboundMessage {
-  final String senderVerkey;
-  final String recipientVerkey;
-  final dynamic message;
+  String senderVerkey;
+  String recipientVerkey;
+  dynamic message;
 
-  InboundMessage(this.senderVerkey, this.recipientVerkey, this.message);
+  InboundMessage({this.senderVerkey, this.recipientVerkey, this.message});
+
+  InboundMessage.fromJson(Map<String, dynamic> json) {
+    senderVerkey = json['sender_verkey'];
+    recipientVerkey = json['recipient_verkey'];
+    message = json['message'];
+  }
+
+  Map<String, dynamic> toJson() {
+    final Map<String, dynamic> data = new Map<String, dynamic>();
+    data['sender_verkey'] = this.senderVerkey;
+    data['recipient_verkey'] = this.recipientVerkey;
+    data['message'] = this.message;
+    return data;
+  }
 }
 
 class Message {

@@ -1,6 +1,11 @@
+/*
+  Copyright AyanWorks Technology Solutions Pvt. Ltd. All Rights Reserved.
+  SPDX-License-Identifier: Apache-2.0
+*/
 import 'dart:convert';
 
 import 'package:AriesFlutterMobileAgent/NetworkServices/Network.dart';
+import 'package:AriesFlutterMobileAgent/Protocols/Connection/ConnectionInterface.dart';
 import 'package:AriesFlutterMobileAgent/Protocols/Connection/ConnectionStates.dart';
 import 'package:AriesFlutterMobileAgent/Storage/DBModels.dart';
 import 'package:AriesFlutterMobileAgent/Utils/Helpers.dart';
@@ -34,9 +39,9 @@ class TrustPingService {
       );
       await DBServices.storeTrustPing(trustPing);
       return true;
-    } catch (error) {
-      print('error in sendTrustPingResponse $error');
-      throw error;
+    } catch (exception) {
+      print('exception in sendTrustPingResponse $exception');
+      throw exception;
     }
   }
 
@@ -44,7 +49,8 @@ class TrustPingService {
     try {
       ConnectionData connectionDB =
           await DBServices.getConnection(inboundMessage.recipientVerkey);
-      Map<String, dynamic> connection = jsonDecode(connectionDB.connection);
+      Connection connection =
+          Connection.fromJson(jsonDecode(connectionDB.connection));
       var message = jsonDecode(inboundMessage.message);
       var trustPingId = message['~thread']['thid'];
       TrustPingData trustPing = TrustPingData(
@@ -55,9 +61,9 @@ class TrustPingService {
       );
       await DBServices.storeTrustPing(trustPing);
       return connection;
-    } catch (error) {
-      print('error in saveTrustPingResponse $error');
-      throw error;
+    } catch (exception) {
+      print('exception in saveTrustPingResponse $exception');
+      throw exception;
     }
   }
 
@@ -92,12 +98,11 @@ class TrustPingService {
           jsonEncode(outboundPackMessage),
         );
       }
-      //update
       await DBServices.updateConnection(storeDataintoDB);
       return connection;
-    } catch (error) {
-      print('error in processPing $error');
-      throw error;
+    } catch (exception) {
+      print('exception in processPing $exception');
+      throw exception;
     }
   }
 }

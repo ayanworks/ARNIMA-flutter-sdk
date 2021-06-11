@@ -1,10 +1,15 @@
+/*
+  Copyright AyanWorks Technology Solutions Pvt. Ltd. All Rights Reserved.
+  SPDX-License-Identifier: Apache-2.0
+*/
 import 'dart:convert';
-
-import 'package:AriesFlutterMobileAgent/AriesAgent.dart';
+import 'package:AriesFlutterMobileAgent/NetworkServices/Network.dart';
+import 'package:AriesFlutterMobileAgent/Storage/DBModels.dart';
 import 'package:AriesFlutterMobileAgent/Utils/Helpers.dart';
-import '../../Pool/Pool.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
+
+import '../../Pool/Pool.dart';
 
 class ConnectWithMediatorService {
   Type get runtimeType => String;
@@ -21,12 +26,6 @@ class ConnectWithMediatorService {
   ) async {
     try {
       var incomingRouterResponse = await postData(url, apiBody);
-      print(
-        "incomingRouterResponse ${incomingRouterResponse['data']['serviceEndpoint']}",
-      );
-      print(
-        "configJson ${configJson.runtimeType}",
-      );
       var user = await DBServices.getWalletData();
       await DBServices.updateWalletData(
         WalletData(
@@ -40,13 +39,11 @@ class ConnectWithMediatorService {
           incomingRouterResponse['data']['routingKeys'][0],
         ),
       );
-
       var createPoolResponse = await Pool.createPool(poolConfig);
       if (!createPoolResponse) {
         throw false;
       }
-      WalletData myWallet = await AriesFlutterMobileAgent.getWalletData();
-      print("i am in routingKey ${myWallet.label}");
+      WalletData myWallet = await DBServices.getWalletData();
       var walletRecord = {
         'label': myWallet.label,
         'serviceEndpoint': myWallet.serviceEndpoint,
@@ -68,16 +65,9 @@ class ConnectWithMediatorService {
           'tags': '{}',
         },
       );
-
-      print("add record response $addRecordResponse");
-      if (addRecordResponse == true) {
-        return true;
-      } else {
-        throw false;
-      }
-    } catch (err) {
-      print("error in AgentRegistration $err");
-      throw err;
+      return addRecordResponse;
+    } catch (exception) {
+      throw exception;
     }
   }
 }

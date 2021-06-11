@@ -1,3 +1,7 @@
+/*
+  Copyright AyanWorks Technology Solutions Pvt. Ltd. All Rights Reserved.
+  SPDX-License-Identifier: Apache-2.0
+*/
 import 'dart:convert';
 
 import 'package:AriesFlutterMobileAgent/NetworkServices/Network.dart';
@@ -25,8 +29,6 @@ class ConnectionService {
         didJson,
         '',
       );
-      print('Connection Status: $connection');
-
       await DBServices.saveConnections(
         ConnectionData(
           connection.verkey,
@@ -40,14 +42,12 @@ class ConnectionService {
       );
 
       connection.connection_state = ConnectionStates.INVITED.state;
-      print('Invitation Value: $invitation');
       String serviceEndpoint = await DBServices.getServiceEndpoint();
       String encodedUrl =
           encodeInvitationFromObject(invitation, serviceEndpoint);
-      print('encoded Url: $encodedUrl');
       return encodedUrl;
-    } catch (err) {
-      print('Err in connection with invitation: $err');
+    } catch (exception) {
+      throw exception;
     }
   }
 
@@ -80,13 +80,10 @@ class ConnectionService {
       var outboundPackMessage =
           await packMessage(configJson, credentialsJson, outboundMessage);
 
-      var outboundMessageResponse = await outboundAgentMessagePost(
+      await outboundAgentMessagePost(
         invitation['serviceEndpoint'],
         outboundPackMessage,
       );
-
-      print(
-          "outboundMessageResponse Response in AcceptInvitation: ${outboundMessageResponse.toString()}");
 
       await DBServices.saveConnections(
         ConnectionData(
@@ -95,8 +92,8 @@ class ConnectionService {
         ),
       );
       return true;
-    } catch (err) {
-      print("Err in CS acceptInvitation $err");
+    } catch (exception) {
+      throw exception;
     }
   }
 
@@ -182,9 +179,8 @@ class ConnectionService {
         ),
       );
       return true;
-    } catch (error) {
-      print('Error in Catch: AcceptResponse:: $error');
-      return false;
+    } catch (exception) {
+      throw exception;
     }
   }
 
@@ -249,9 +245,9 @@ class ConnectionService {
       );
       await DBServices.saveConnections(storeDataintoDB);
       return true;
-    } catch (error) {
-      print('Error in Catch: acceptRequest:: $error');
-      return false;
+    } catch (exception) {
+      print('Error in Catch: acceptRequest:: $exception');
+      throw exception;
     }
   }
 
@@ -325,8 +321,9 @@ class ConnectionService {
       );
 
       return connection;
-    } catch (err) {
-      print("Err in acceptInvitation $err");
+    } catch (exception) {
+      print("Err in acceptInvitation $exception");
+      throw exception;
     }
   }
 }

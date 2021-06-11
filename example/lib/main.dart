@@ -1,3 +1,4 @@
+import 'package:AriesFlutterMobileAgent_example/screens/connection_detail_screen.dart';
 import 'package:AriesFlutterMobileAgent_example/screens/connection_screen.dart';
 import 'package:AriesFlutterMobileAgent_example/screens/create_wallet_screen.dart';
 import 'package:AriesFlutterMobileAgent_example/screens/qrcode_screen.dart';
@@ -21,7 +22,7 @@ class _MyAppState extends State<MyApp> {
   bool loggedIn = false;
 
   void isValidUser() async {
-    var userData = await DBServices.getWalletData();
+    var userData = await AriesFlutterMobileAgent.getWalletData();
     if (userData != null) {
       setState(() {
         loggedIn = true;
@@ -31,12 +32,13 @@ class _MyAppState extends State<MyApp> {
 
   void connectSocket() async {
     try {
-      var sdkDB = await DBServices.getWalletData();
+      var sdkDB = await AriesFlutterMobileAgent.getWalletData();
       if (sdkDB != null) {
         AriesFlutterMobileAgent.socketInit();
       }
-    } catch (error) {
-      print('Oops! Something went wrong. Please try again later. $error');
+    } catch (exception) {
+      print('Oops! Something went wrong. Please try again later. $exception');
+      throw exception;
     }
   }
 
@@ -59,6 +61,7 @@ class _MyAppState extends State<MyApp> {
       routes: {
         ConnectMediatorScreen.routeName: (ctx) => ConnectMediatorScreen(),
         ConnectionScreen.routeName: (ctx) => ConnectionScreen(),
+        ConnectionDetailScreen.routeName: (ctx) => ConnectionDetailScreen(),
         QRcodeScreen.routeName: (ctx) => QRcodeScreen(),
       },
     );

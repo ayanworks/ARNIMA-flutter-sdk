@@ -1,7 +1,11 @@
+import 'dart:async';
 import 'dart:convert';
+import 'dart:developer';
 
 import 'package:AriesFlutterMobileAgent_example/helpers/helpers.dart';
+import 'package:AriesFlutterMobileAgent_example/screens/connection_detail_screen.dart';
 import 'package:AriesFlutterMobileAgent_example/screens/qrcode_screen.dart';
+import 'package:AriesFlutterMobileAgent_example/widgets/custom_dialog_box.dart';
 import 'package:barcode_scan/barcode_scan.dart';
 import 'package:flutter/material.dart';
 
@@ -14,32 +18,41 @@ class ConnectionScreen extends StatefulWidget {
   _ConnectionScreenState createState() => _ConnectionScreenState();
 }
 
-class _ConnectionScreenState extends State<ConnectionScreen> {
+class _ConnectionScreenState extends State<ConnectionScreen>
+    with SingleTickerProviderStateMixin {
+  TabController tabController;
   ProgressDialog progressIndicator;
   String label = "";
   String endPoint = "";
-  List<ConnectionData> connectionList = [];
+  List<dynamic> connectionList = [];
+  List<dynamic> credentialList = [];
+  List<dynamic> messageList = [];
+  String title = "Home";
+
+  Future eventListener() async {
+    emitterAriesSdk.on("SDKEvent", null, (ev, context) async {
+      await getConnections();
+      await getAllCredentials();
+      await getAllActionMessages();
+    });
+  }
 
   void connectSocket() async {
     try {
-      var sdkDB = await DBServices.getWalletData();
+      var sdkDB = await AriesFlutterMobileAgent.getWalletData();
       if (sdkDB != null) {
         AriesFlutterMobileAgent.socketInit();
       }
-    } catch (error) {
-      print('Oops! Something went wrong. Please try again later. $error');
+    } catch (exception) {
+      print('Oops! Something went wrong. Please try again later. $exception');
+      throw exception;
     }
   }
 
   addNewConnection() async {
     var result = await BarcodeScanner.scan();
-    print(result.rawContent);
     Object val = decodeInvitationFromUrl(result.rawContent);
     Map<String, dynamic> values = jsonDecode(val);
-    print(values);
-
-    print(values['label']);
-    print(values['serviceEndpoint']);
 
     if (values['serviceEndpoint'] != null) {
       setState(() {
@@ -107,7 +120,6 @@ class _ConnectionScreenState extends State<ConnectionScreen> {
       ],
     );
 
-    // show the dialog
     showDialog(
       context: context,
       builder: (context) {
@@ -118,27 +130,53 @@ class _ConnectionScreenState extends State<ConnectionScreen> {
 
   Future acceptInvitation(invitation) async {
     try {
-      var status = await AriesFlutterMobileAgent.acceptInvitation(
+      await AriesFlutterMobileAgent.acceptInvitation(
         {},
         invitation,
       );
-      print("is Invitation Accepted::: $status");
-
       progressIndicator.hide();
       await AriesFlutterMobileAgent.socketInit();
       setState(() {
         getConnections();
       });
-    } catch (err) {
-      print("erro in main accin $err");
+    } catch (exception) {
+      throw exception;
     }
   }
 
   Future getConnections() async {
-    List<ConnectionData> connections = await DBServices.getAllConnections();
+    List<dynamic> connections =
+        await AriesFlutterMobileAgent.getAllConnections();
     setState(() {
       connectionList = connections;
     });
+  }
+
+  Future getAllCredentials() async {
+    try {
+      progressIndicator.show();
+      List<dynamic> credentials =
+          await AriesFlutterMobileAgent.listAllCredentials(filter: {});
+      progressIndicator.hide();
+      setState(() {
+        credentialList = credentials;
+      });
+    } catch (exception) {
+      print("error in listallcred $exception");
+      throw exception;
+    }
+  }
+
+  Future getAllActionMessages() async {
+    try {
+      List<dynamic> messages =
+          await AriesFlutterMobileAgent.getAllActionMessages();
+      setState(() {
+        messageList = messages;
+      });
+    } catch (exception) {
+      throw exception;
+    }
   }
 
   Future createInvitation() async {
@@ -150,11 +188,27 @@ class _ConnectionScreenState extends State<ConnectionScreen> {
     );
   }
 
+  void navigateToConnectionDetail(connection) {
+    Navigator.pushNamed(
+      context,
+      ConnectionDetailScreen.routeName,
+      arguments: ConnectionDetailArguments(connection),
+    );
+  }
+
   @override
   void initState() {
     super.initState();
+    eventListener();
     getConnections();
     connectSocket();
+    tabController = new TabController(length: 3, vsync: this);
+  }
+
+  @override
+  void dispose() {
+    tabController.dispose();
+    super.dispose();
   }
 
   @override
@@ -172,66 +226,315 @@ class _ConnectionScreenState extends State<ConnectionScreen> {
         fontSize: 18,
       ),
     );
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Connections'),
-      ),
-      body: RefreshIndicator(
-        onRefresh: getConnections,
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            RaisedButton(
-              onPressed: createInvitation,
-              child: Text('create Invitation'),
-            ),
-            Expanded(
-              child: ListView.builder(
-                padding: EdgeInsets.only(top: 5),
-                itemCount: connectionList.length,
-                itemBuilder: (BuildContext context, int index) {
-                  var connection = jsonDecode(connectionList[index].connection);
-                  if (connectionList.length == 0) {
-                    return Center(
-                      child: Text('Go ahead and connect with someone'),
-                    );
-                  }
-                  return GestureDetector(
-                    onTap: () {},
-                    child: Card(
-                      shadowColor: Colors.grey,
-                      child: ListTile(
-                        leading: GestureDetector(
-                          behavior: HitTestBehavior.translucent,
-                          onTap: () {},
-                          child: Container(
-                            width: 60,
-                            height: 60,
-                            padding: EdgeInsets.symmetric(vertical: 4.0),
-                            alignment: Alignment.center,
-                            child: CircleAvatar(
-                              child: Icon(Icons.verified),
+    return DefaultTabController(
+      length: 3,
+      child: Scaffold(
+        appBar: AppBar(
+          bottom: TabBar(
+            tabs: [
+              Tab(text: "Connections"),
+              Tab(text: "Credentials"),
+              Tab(text: "Actions"),
+            ],
+          ),
+          title: Text("Home"),
+          automaticallyImplyLeading: false,
+        ),
+        body: TabBarView(
+          children: [
+            RefreshIndicator(
+              onRefresh: getConnections,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: <Widget>[
+                  RaisedButton(
+                    onPressed: createInvitation,
+                    child: Text('create Invitation'),
+                  ),
+                  RaisedButton(
+                    onPressed: addNewConnection,
+                    child: Text('Add new Connection'),
+                    color: Colors.blue[200],
+                  ),
+                  Expanded(
+                    child: ListView.builder(
+                      padding: EdgeInsets.only(top: 5),
+                      itemCount: connectionList.length,
+                      itemBuilder: (BuildContext context, int index) {
+                        var connection =
+                            jsonDecode(connectionList[index].connection);
+                        if (connectionList.length == 0) {
+                          return Center(
+                            child: Text('You dont have any connections yet'),
+                          );
+                        }
+                        return GestureDetector(
+                          onTap: () => navigateToConnectionDetail(connection),
+                          child: Card(
+                            shadowColor: Colors.grey,
+                            child: ListTile(
+                              leading: GestureDetector(
+                                behavior: HitTestBehavior.translucent,
+                                child: Container(
+                                  width: 60,
+                                  height: 60,
+                                  padding: EdgeInsets.symmetric(vertical: 4.0),
+                                  alignment: Alignment.center,
+                                  child: CircleAvatar(
+                                    child: Icon(Icons.verified),
+                                  ),
+                                ),
+                              ),
+                              trailing: Icon(Icons.arrow_forward_ios),
+                              title: Text(connection['theirLabel']),
+                              subtitle: Text('State :  ${connection['state']}'),
+                              selectedTileColor: Colors.orange,
+                              contentPadding: EdgeInsets.all(7),
                             ),
                           ),
-                        ),
-                        trailing: Icon(Icons.arrow_forward_ios),
-                        title: Text(connection['theirLabel']),
-                        subtitle: Text('State :  ${connection['state']}'),
-                        selectedTileColor: Colors.orange,
-                        contentPadding: EdgeInsets.all(7),
-                      ),
+                        );
+                      },
                     ),
-                  );
-                },
+                  ),
+                ],
+              ),
+            ),
+            RefreshIndicator(
+              onRefresh: getAllCredentials,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: <Widget>[
+                  Expanded(
+                    child: ListView.builder(
+                      padding: EdgeInsets.only(top: 5),
+                      itemCount: credentialList.length,
+                      itemBuilder: (BuildContext context, int index) {
+                        if (credentialList.length == 0) {
+                          return Center(
+                            child: Text('You dont have any credentials yet'),
+                          );
+                        }
+                        List attrsData = [];
+                        credentialList[index]['attrs'].forEach((key, value) {
+                          var data = {
+                            "name": key,
+                            "value": value,
+                          };
+                          attrsData.add(data);
+                        });
+                        return Card(
+                          shadowColor: Colors.grey,
+                          child: ListTile(
+                            leading: Container(
+                              height: 40,
+                              width: 40,
+                              child: Icon(
+                                Icons.card_membership,
+                                color: Colors.amber,
+                              ),
+                            ),
+                            title: Text(credentialList[index]['cred_def_id']
+                                .split(':')[4]),
+                            contentPadding: EdgeInsets.all(7),
+                            trailing: GestureDetector(
+                              onTap: () => showDialog(
+                                context: context,
+                                builder: (BuildContext context) {
+                                  return CustomDialogBox(
+                                    title: 'Credential',
+                                    action: "Accept",
+                                    attributes: attrsData,
+                                    isCredential: true,
+                                    showActionButton: false,
+                                  );
+                                },
+                              ),
+                              child: Container(
+                                height: 35,
+                                width: 100,
+                                alignment: Alignment.center,
+                                color: Colors.blue,
+                                child: Text(
+                                  'View',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    backgroundColor: Colors.blue,
+                                    fontSize: 14,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            RefreshIndicator(
+              onRefresh: getAllActionMessages,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: <Widget>[
+                  Expanded(
+                    child: ListView.builder(
+                      padding: EdgeInsets.only(top: 5),
+                      itemCount: messageList.length,
+                      itemBuilder: (BuildContext context, int index) {
+                        if (messageList.length == 0) {
+                          return Text('You dont have any messages');
+                        }
+                        if (jsonDecode(messageList[index].messages)['message']
+                                ['@type'] ==
+                            "did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/issue-credential/1.0/offer-credential") {
+                          List<dynamic> attributes =
+                              jsonDecode(messageList[index].messages)['message']
+                                  ['credential_preview']['attributes'];
+                          return Card(
+                            shadowColor: Colors.grey,
+                            child: ListTile(
+                              leading: Container(
+                                height: 40,
+                                width: 40,
+                                child: Icon(
+                                  Icons.card_membership,
+                                  color: Colors.amber,
+                                ),
+                              ),
+                              title: Text('Credential'),
+                              subtitle: Text('state'),
+                              contentPadding: EdgeInsets.all(7),
+                              trailing: GestureDetector(
+                                onTap: () => showDialog(
+                                  context: context,
+                                  builder: (BuildContext context) {
+                                    return CustomDialogBox(
+                                      title: 'Credential',
+                                      action: "Accept",
+                                      attributes: attributes,
+                                      message: messageList[index],
+                                      isCredential: true,
+                                      showActionButton: true,
+                                    );
+                                  },
+                                ),
+                                child: Container(
+                                  height: 35,
+                                  width: 100,
+                                  alignment: Alignment.center,
+                                  color: Colors.blue,
+                                  child: Text(
+                                    'View & Save',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      backgroundColor: Colors.blue,
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          );
+                        }
+                        if (jsonDecode(messageList[index].messages)['message']
+                                ['@type'] ==
+                            "did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/present-proof/1.0/request-presentation") {
+                          var base64Data =
+                              jsonDecode(messageList[index].messages)['message']
+                                      ['request_presentations~attach'][0]
+                                  ['data']['base64'];
+                          Map<String, dynamic> proofData =
+                              jsonDecode(decodeBase64(base64Data));
+                          log(proofData.toString());
+                          List keys =
+                              proofData['requested_attributes'].keys.toList();
+                          List predicatesKeys =
+                              proofData['requested_predicates'].keys.toList();
+                          List attrsData = [];
+                          keys.asMap().forEach((index, key) {
+                            var data = {
+                              "name": proofData['requested_attributes'][key]
+                                      ['restrictions'][0]['cred_def_id']
+                                  .split(':')[4],
+                              "value": proofData['requested_attributes'][key]
+                                  ['name']
+                            };
+                            attrsData.add(data);
+                          });
+                          predicatesKeys.asMap().forEach((index, key) {
+                            var data = {
+                              "name": proofData['requested_predicates'][key]
+                                      ['restrictions'][0]['cred_def_id']
+                                  .split(':')[4],
+                              "value": proofData['requested_predicates'][key]
+                                      ['name'] +
+                                  " " +
+                                  proofData['requested_predicates'][key]
+                                          ['p_type']
+                                      .toString() +
+                                  " " +
+                                  proofData['requested_predicates'][key]
+                                          ['p_value']
+                                      .toString()
+                            };
+                            attrsData.add(data);
+                          });
+                          return Card(
+                            shadowColor: Colors.grey,
+                            child: ListTile(
+                              leading: Container(
+                                height: 40,
+                                width: 40,
+                                child: Icon(
+                                  Icons.domain_verification,
+                                  color: Colors.amber,
+                                ),
+                              ),
+                              title: Text('Presentation'),
+                              subtitle: Text('state'),
+                              contentPadding: EdgeInsets.all(7),
+                              trailing: GestureDetector(
+                                onTap: () => showDialog(
+                                  context: context,
+                                  builder: (BuildContext context) {
+                                    return CustomDialogBox(
+                                      title: 'Proof',
+                                      action: "Send",
+                                      attributes: attrsData,
+                                      message: messageList[index],
+                                      isCredential: false,
+                                      buildContext: context,
+                                    );
+                                  },
+                                ),
+                                child: Container(
+                                  height: 35,
+                                  width: 70,
+                                  alignment: Alignment.center,
+                                  color: Colors.blue,
+                                  child: Text(
+                                    'Send',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      backgroundColor: Colors.blue,
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          );
+                        }
+                        return Text('');
+                      },
+                    ),
+                  ),
+                ],
               ),
             ),
           ],
         ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: addNewConnection,
-        tooltip: 'Increment',
-        child: Icon(Icons.add),
       ),
     );
   }

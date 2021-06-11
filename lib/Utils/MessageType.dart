@@ -29,6 +29,8 @@ class MessageType {
       "did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/present-proof/1.0/presentation";
   static const String PresentationAck =
       "did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/present-proof/1.0/ack";
+  static const String ProposePresentation =
+      "did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/present-proof/1.0/propose-presentation";
   static const String BasicMessage =
       "did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/basicmessage/1.0/message";
   static const String CredentialPreview =
